@@ -40,14 +40,19 @@ let search={
     });
     
     const data = await response.json();
-    console.log(data);
-    if (data.status) {
-    properties = data.data;
-    }else {
+    console.log(data.data);
+   if (data.status) {
+      if(data.data.length) {
+      properties = data.data;
+      }else {
+      errorMessage = data.message
+      properties = []
+      }
+    }
+    else {
       properties = []
       errorMessage = data.message
     }
-    console.log(properties);
       }
 
 </script>

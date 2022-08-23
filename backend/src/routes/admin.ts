@@ -9,7 +9,8 @@ import multer from "multer"
 import {v4 as uuid} from "uuid"
 import {Storage} from "@google-cloud/storage"
 import path from "path"
-
+import dotenv from "dotenv";
+dotenv.config();
 const jwtToken2 = process.env.JWT_TOKEN_KEY2!;
 
 
@@ -37,9 +38,10 @@ app.post("/login", async (req: any, res: Response) => {
     // else if (loggingUser.accountVerified == false) {
     //   throw new Error("please verify your account");
     // }
+    console.log(loggingUser , jwtToken2 , 'kk')
 
     let token = jwt.sign({ id: loggingUser._id }, jwtToken2);
-    console.log(loggingUser, token);
+    console.log(token)
 
     await User.findByIdAndUpdate(loggingUser._id, { login_token: token })
       .then(() => {
@@ -65,7 +67,6 @@ app.post("/login", async (req: any, res: Response) => {
 
 
 app.post("/searchpropertybyid", async (req:Request, res:Response) => {
-console.log('19',req.body.search);
 
     let response:response = {
         message : "somthing went wrong",
@@ -107,7 +108,6 @@ console.log('19',req.body.search);
         }
     
       }
-      console.log(response);
 
 
     res.json(response)
@@ -126,31 +126,49 @@ app.post("/searchpropertybyquery", async (req:Request, res:Response) => {
       try {
         
             let searchEXP = new RegExp(`${req.body.search}`, "i")
-            let searchQuery = []
+            // let searchQuery = []
     
-            if (req.body.search) {
-                searchQuery.push({address_1 : searchEXP})
-                searchQuery.push({address_2 : searchEXP})
-                searchQuery.push({country : searchEXP})
-                searchQuery.push({state : searchEXP})
-                searchQuery.push({city : searchEXP})
-                searchQuery.push({year : searchEXP})                
-                searchQuery.push({highlights: {$in: [searchEXP]}})         
-            }
+            // if (req.body.search) {
+            //     searchQuery.push({address_1 : searchEXP})
+            //     searchQuery.push({address_2 : searchEXP})
+            //     searchQuery.push({country : searchEXP})
+            //     searchQuery.push({state : searchEXP})
+            //     searchQuery.push({city : searchEXP})
+            //     searchQuery.push({year : searchEXP})                
+            //     searchQuery.push({highlights: {$in: [searchEXP]}})         
+            // }
     
-            req.body.type?  searchQuery.push({type : req.body.type}) : null
-            req.body.space_use?  searchQuery.push({space_use : req.body.space_use}) : null
-            req.body.for?  searchQuery.push({for : req.body.for}) : null
-            req.body.country?  searchQuery.push({country : req.body.country}) : null
-            req.body.state?  searchQuery.push({state : req.body.state}) : null
-            req.body.city?  searchQuery.push({city : req.body.city}) : null
-            req.body.zip_code?  searchQuery.push({zip_code : req.body.zip_code}) : null
+            // req.body.type?  searchQuery.push({type : req.body.type}) : null
+            // req.body.space_use?  searchQuery.push({space_use : req.body.space_use}) : null
+            // req.body.for?  searchQuery.push({for : req.body.for}) : null
+            // req.body.country?  searchQuery.push({country : req.body.country}) : null
+            // req.body.state?  searchQuery.push({state : req.body.state}) : null
+            // req.body.city?  searchQuery.push({city : req.body.city}) : null
+            // req.body.zip_code?  searchQuery.push({zip_code : req.body.zip_code}) : null
          
     
-            console.log(searchQuery);
     
         
-            let Data = await Property.find( {$or: searchQuery})
+            let Data = await Property.find({
+    $or: [
+    {address_1: {$regex: searchEXP}},
+    {address_2: {$regex: searchEXP}},
+    {country: {$regex: searchEXP}},
+    {state: {$regex: searchEXP}},
+    {city: {$regex: searchEXP}},
+    {year: {$regex: searchEXP}},
+    {highlights: {$regex: searchEXP}},
+    
+    ]
+})
+
+            // let Data = await Property.find( {$or: searchQuery})
+
+
+            console.log(Data)
+            Data = Data.filter((sData) => {
+              return sData.status === 'active'
+            })
             
         
             response = {
@@ -168,15 +186,12 @@ app.post("/searchpropertybyquery", async (req:Request, res:Response) => {
           response.status = false
           response.message = error.message
         }
-        console.log(response);
   
   
       res.json(response)
   });
 
    app.get("/getuser/:id", async (req: any, res: Response)=>{
-console.log(130,'ok',req.params.id);
-
     let response: response = {
       status: false,
       message: "somthing went wrong, try later",
@@ -184,7 +199,6 @@ console.log(130,'ok',req.params.id);
   
     try {
       let user:any = await User.findOne({_id: req.params.id});
-  console.log(user);
   
       if (user) {
        console.log(user);
@@ -214,7 +228,7 @@ app.get("/getsingleproperty/:id",async (req:Request, res:Response) => {
 
   try {
       let data;
-      await Property.findById(req.params.id)
+      await Property.findOne({uid: req.params.id})
       .then(res => {
           data = res
       })
@@ -246,11 +260,10 @@ app.get("/getsingleproperty/:id",async (req:Request, res:Response) => {
         message : "somthing went wrong",
         status: false
     }
-    console.log(req.params.id,'38ok')
 
     try {
         let data;
-        await Property.findByIdAndUpdate(req.params.id ,{
+        await Property.findOneAndUpdate({uid: req.params.id} ,{
             status: 'blocked'
           },{new: true})
         .then(res => {
@@ -287,7 +300,7 @@ app.get("/getsingleproperty/:id",async (req:Request, res:Response) => {
         };
       
         try {
-          let user:any = await User.findOneAndUpdate(req.params.id ,{
+          let user:any = await User.findByIdAndUpdate(req.params.id ,{
             status: 'blocked'
           },{new: true});
       console.log(user);

@@ -45,7 +45,7 @@
         //         console.log(userData);
         //     }
         // })
-  
+  console.log(id)
         const response = await fetch(`${API}/admin/getsingleproperty/${id}`, {
             method: "GET",
             headers: {
