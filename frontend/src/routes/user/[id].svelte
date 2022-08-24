@@ -26,6 +26,11 @@
 
     onMount(async ()=>{
 
+        let token = localStorage.getItem("login");
+        if (!token) {
+        window.location.href = "/"
+    }
+
         // token = JSON.parse(localStorage.getItem("login"))
 
         // await fetch(`${API}/user`, {

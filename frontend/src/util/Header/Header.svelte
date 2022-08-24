@@ -21,6 +21,9 @@
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="/search">Search</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="/complaints">Complaints</a>
+        </li>
         
       </ul>
 <div class="d-flex">

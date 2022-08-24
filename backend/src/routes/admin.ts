@@ -1,6 +1,7 @@
 
 import express,{Application,Request,Response,NextFunction} from "express";
 import {Property} from "../model/Property"
+import { Complaint } from "../model/Complaint";
 import {User} from "../model/User";
 import {Admin} from "../model/Admin"
 import { response } from "../types/types";
@@ -38,10 +39,9 @@ app.post("/login", async (req: any, res: Response) => {
     // else if (loggingUser.accountVerified == false) {
     //   throw new Error("please verify your account");
     // }
-    console.log(loggingUser , jwtToken2 , 'kk')
 
     let token = jwt.sign({ id: loggingUser._id }, jwtToken2);
-    console.log(token)
+   
 
     await User.findByIdAndUpdate(loggingUser._id, { login_token: token })
       .then(() => {
@@ -165,7 +165,6 @@ app.post("/searchpropertybyquery", async (req:Request, res:Response) => {
             // let Data = await Property.find( {$or: searchQuery})
 
 
-            console.log(Data)
             Data = Data.filter((sData) => {
               return sData.status === 'active'
             })
@@ -201,7 +200,6 @@ app.post("/searchpropertybyquery", async (req:Request, res:Response) => {
       let user:any = await User.findOne({_id: req.params.id});
   
       if (user) {
-       console.log(user);
        
         response.data = user
         response.status = true
@@ -303,10 +301,8 @@ app.get("/getsingleproperty/:id",async (req:Request, res:Response) => {
           let user:any = await User.findByIdAndUpdate(req.params.id ,{
             status: 'blocked'
           },{new: true});
-      console.log(user);
       
           if (user) {
-           console.log(user);
            
             response.data = user
             response.status = true
@@ -323,6 +319,98 @@ app.get("/getsingleproperty/:id",async (req:Request, res:Response) => {
       
         res.json(response);
       })
+
+
+app.get('/getcomplaints' , async (req , res) => {
+  let response:response = {
+    message : "somthing went wrong",
+    status: false
+}
+try {
+  let complaints = await Complaint.find().sort({_id: -1});
+  
+  if (complaints) {
+           
+    response.data = complaints
+    response.status = true
+    response.message = "Success"
+
+    console.log(response);
+    
+  }
+  
+} catch (error: any) {
+  response = {
+    ...response,
+    status: false,
+    message: error.message,
+  };
+}
+
+res.json(response);
+
+})
+
+app.get('/getsinglecomplaint/:id' , async (req , res) => {
+  let response:response = {
+    message : "somthing went wrong",
+    status: false
+}
+try {
+  let complaint = await Complaint.find({_id: req.params.id});
+  
+  if (complaint) {
+           
+    response.data = complaint
+    response.status = true
+    response.message = "Success"
+
+    console.log(response);
+    
+  }
+  
+} catch (error: any) {
+  response = {
+    ...response,
+    status: false,
+    message: error.message,
+  };
+}
+
+res.json(response);
+
+})
+
+
+
+app.put('/solvecomplaint/:id' , async (req , res) => {
+
+  let response:response = {
+    message : "somthing went wrong",
+    status: false
+}
+
+try {
+
+  let data;
+  await Complaint.findOneAndUpdate({_id: req.params.id} ,{
+    status: 'completed'
+  },{new: true})
+.then(res => {
+    data = res
+})
+response.data = data
+response.status = true
+response.message = "Success"
+} catch (error: any) {
+  response = {
+    ...response,
+    status: false,
+    message: error.message,
+  };
+}
+res.json(response)
+})
   
 
 export default app;
